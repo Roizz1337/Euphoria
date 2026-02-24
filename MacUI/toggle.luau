@@ -21,7 +21,7 @@ local function __create_gui(parent: Instance): ScreenGui
     local screen_gui = Instance.new("ScreenGui", parent)
     screen_gui.Name             = GUI_NAME
     screen_gui.ResetOnSpawn     = false
-    screen_gui.DisplayOrder     = 999999
+    screen_gui.DisplayOrder     = 5
     screen_gui.IgnoreGuiInset   = true
     screen_gui.ZIndexBehavior   = Enum.ZIndexBehavior.Sibling
 
