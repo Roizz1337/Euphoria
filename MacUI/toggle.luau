@@ -1,7 +1,7 @@
 local cloneref = cloneref or function(x) return x end
 
 --@services
-local core_gui        : CoreGui         = cloneref(game:GetService("CoreGui"))
+local core_gui        : CoreGui          = cloneref(game:GetService("CoreGui"))
 local user_input      : UserInputService = cloneref(game:GetService("UserInputService"))
 
 --@types
@@ -12,52 +12,52 @@ type interface_type = {
 }
 
 --@constants
-local GUI_NAME    : string = "Ajomok UI"
-local ICON_ID     : string = "rbxassetid://104695336294005"
+local GUI_NAME : string = "Ajomok UI"
+local ICON_ID  : string = "rbxassetid://104695336294005"
 
 --@gui_builder
 local function __create_gui(parent: Instance): ScreenGui
     --@screen_gui
-    local screen_gui                  = Instance.new("ScreenGui", parent)
-    screen_gui.Name                   = GUI_NAME
-    screen_gui.ResetOnSpawn           = false
-    screen_gui.DisplayOrder           = 999999
-    screen_gui.IgnoreGuiInset         = true
-    screen_gui.ZIndexBehavior         = Enum.ZIndexBehavior.Sibling
+    local screen_gui = Instance.new("ScreenGui", parent)
+    screen_gui.Name             = GUI_NAME
+    screen_gui.ResetOnSpawn     = false
+    screen_gui.DisplayOrder     = 999999
+    screen_gui.IgnoreGuiInset   = true
+    screen_gui.ZIndexBehavior   = Enum.ZIndexBehavior.Sibling
 
     --@main_frame
-    local main_frame                  = Instance.new("Frame", screen_gui)
-    main_frame.Name                   = "main"
-    main_frame.AnchorPoint            = Vector2.new(0, 0.5)
-    main_frame.Position               = UDim2.new(0, 5, 0.5, 0)
-    main_frame.Size                   = UDim2.new(0, 55, 0, 55)
-    main_frame.BackgroundColor3       = Color3.new(1, 1, 1)
-    main_frame.BorderSizePixel        = 0
-    main_frame.Active                 = true
-    main_frame.Draggable              = false
+    local main_frame = Instance.new("Frame", screen_gui)
+    main_frame.Name             = "main"
+    main_frame.AnchorPoint      = Vector2.new(0, 0.5)
+    main_frame.Position         = UDim2.new(0, 5, 0.5, 0)
+    main_frame.Size             = UDim2.new(0, 55, 0, 55)
+    main_frame.BackgroundColor3 = Color3.new(1, 1, 1)
+    main_frame.BorderSizePixel  = 0
+    main_frame.Active           = true
+    main_frame.Draggable        = false
 
     --@gradient
-    local ui_gradient                 = Instance.new("UIGradient", main_frame)
-    ui_gradient.Rotation              = 50
-    ui_gradient.Color                 = ColorSequence.new({
-        ColorSequenceKeypoint.new(0,         Color3.new(0.643137, 0.615686, 1)),
-        ColorSequenceKeypoint.new(0.515913,  Color3.new(0.117647, 0.105882, 0.14902)),
-        ColorSequenceKeypoint.new(1,         Color3.new(0.643137, 0.615686, 1)),
+    local ui_gradient        = Instance.new("UIGradient", main_frame)
+    ui_gradient.Rotation     = 50
+    ui_gradient.Color        = ColorSequence.new({
+        ColorSequenceKeypoint.new(0,        Color3.new(0.643137, 0.615686, 1)),
+        ColorSequenceKeypoint.new(0.515913, Color3.new(0.117647, 0.105882, 0.14902)),
+        ColorSequenceKeypoint.new(1,        Color3.new(0.643137, 0.615686, 1)),
     })
 
     --@corner
-    local ui_corner                   = Instance.new("UICorner", main_frame)
-    ui_corner.CornerRadius            = UDim.new(0, 15)
+    local ui_corner          = Instance.new("UICorner", main_frame)
+    ui_corner.CornerRadius   = UDim.new(0, 15)
 
     --@stroke
-    local ui_stroke                   = Instance.new("UIStroke", main_frame)
-    ui_stroke.Color                   = Color3.new(1, 1, 1)
-    ui_stroke.Thickness               = 2
+    local ui_stroke          = Instance.new("UIStroke", main_frame)
+    ui_stroke.Color          = Color3.new(1, 1, 1)
+    ui_stroke.Thickness      = 2
 
     --@stroke_gradient
-    local stroke_gradient             = Instance.new("UIGradient", ui_stroke)
-    stroke_gradient.Rotation          = 90
-    stroke_gradient.Color             = ColorSequence.new({
+    local stroke_gradient    = Instance.new("UIGradient", ui_stroke)
+    stroke_gradient.Rotation = 90
+    stroke_gradient.Color    = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.new(0.286275, 0.415686, 1)),
         ColorSequenceKeypoint.new(1, Color3.new(0.137255, 0.137255, 0.137255)),
     })
@@ -88,9 +88,9 @@ local function __create_gui(parent: Instance): ScreenGui
     toggle_btn.ZIndex                 = 9999999
 
     --@drag_system
-    local dragging  : boolean         = false
-    local drag_start: Vector3?        = nil
-    local start_pos : UDim2?          = nil
+    local dragging  : boolean  = false
+    local drag_start: Vector3? = nil
+    local start_pos : UDim2?   = nil
 
     local function __update_drag(input: InputObject): ()
         if not drag_start or not start_pos then return end
@@ -106,7 +106,7 @@ local function __create_gui(parent: Instance): ScreenGui
     local function __begin_drag(input: InputObject): ()
         if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
-            dragging  = true
+            dragging   = true
             drag_start = input.Position
             start_pos  = main_frame.Position
 
@@ -138,29 +138,42 @@ local function __create_gui(parent: Instance): ScreenGui
     return screen_gui
 end
 
+--@get_gui (bypass anti-cheat: parent ke PlayerGui via gethui)
+local function __get_parent(): Instance
+    local success, result = pcall(function()
+        return gethui()
+    end)
+    if success and result then
+        return result
+    end
+    return core_gui
+end
+
 --@interface
 local interface: interface_type = {} :: interface_type
 
 function interface:is_already_executed(): ()
-    local existing: Instance? = core_gui:FindFirstChild(GUI_NAME)
+    local parent  = __get_parent()
+    local existing: Instance? = parent:FindFirstChild(GUI_NAME)
     if existing then
         existing:Destroy()
     end
 end
 
 function interface:toggle_position(): Instance?
-    return core_gui:FindFirstChild(GUI_NAME)
+    return __get_parent():FindFirstChild(GUI_NAME)
 end
 
 function interface:initial_interface(callback: (() -> ())?): ()
-    local existing: Instance? = core_gui:FindFirstChild(GUI_NAME)
+    local parent            = __get_parent()
+    local existing: Instance? = parent:FindFirstChild(GUI_NAME)
     if existing then
         existing:Destroy()
     end
 
-    local ui: ScreenGui        = __create_gui(core_gui)
-    local main: Frame          = ui:FindFirstChild("main") :: Frame
-    local togl: TextButton     = main:FindFirstChild("togl") :: TextButton
+    local ui: ScreenGui    = __create_gui(parent)
+    local main: Frame      = ui:FindFirstChild("main") :: Frame
+    local togl: TextButton = main:FindFirstChild("togl") :: TextButton
 
     if callback then
         togl.MouseButton1Click:Connect(function()
