@@ -4,7 +4,7 @@
     | |/ |/ / / _ \/ _  / /_/ // /  
     |__/|__/_/_//_/\_,_/\____/___/
     
-    v1.6.64  |  2026-02-26  |  Roblox UI Library for scripts
+    v1.6.64  |  2026-02-07  |  Roblox UI Library for scripts
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -1030,7 +1030,7 @@ local M,N=pcall(getcustomasset,J)
 if M then
 H.ImageLabel.Image=N
 else
-warn(string.format("[cr] Failed to load custom asset '%s': %s",J,tostring(N)))
+warn(string.format("[ WindUI.Creator ] Failed to load custom asset '%s': %s",J,tostring(N)))
 H:Destroy()
 
 return
@@ -1038,7 +1038,7 @@ end
 end)
 end)
 if not L then
-warn("[cr]  '"..identifyexecutor()or"Studio".."' doesnt support the URL Images. Error: "..M)
+warn("[ WindUI.Creator ]  '"..identifyexecutor()or"Studio".."' doesnt support the URL Images. Error: "..M)
 
 H:Destroy()
 end
@@ -2940,36 +2940,183 @@ return aa end function a.p()
 
 
 
-local aa=a.load'c'
-local ab=aa.New
+local aa=(cloneref or clonereference or function(aa)return aa end)
 
-return function(ac)
-local ad={}
 
-local ae=ab("Frame",{
+local function map(ab,ac,ad,ae,af)
+return(ab-ac)*(af-ae)/(ad-ac)+ae
+end
+
+local function viewportPointToWorld(ab,ac)
+local ad=aa(game:GetService"Workspace").CurrentCamera:ScreenPointToRay(ab.X,ab.Y)
+return ad.Origin+ad.Direction*ac
+end
+
+local function getOffset()
+local ab=aa(game:GetService"Workspace").CurrentCamera.ViewportSize.Y
+return map(ab,0,2560,8,56)
+end
+
+return{viewportPointToWorld,getOffset}end function a.q()
+
+
+
+local aa=(cloneref or clonereference or function(aa)return aa end)
+
+
+local ab=a.load'c'
+local ac=ab.New
+
+
+local ad,ae=unpack(a.load'p')
+local af=Instance.new("Folder",aa(game:GetService"Workspace").CurrentCamera)
+
+
+local function createAcrylic()
+local ag=ac("Part",{
+Name="Body",
+Color=Color3.new(0,0,0),
+Material=Enum.Material.Glass,
+Size=Vector3.new(1,1,0),
+Anchored=true,
+CanCollide=false,
+Locked=true,
+CastShadow=false,
+Transparency=0.98,
+},{
+ac("SpecialMesh",{
+MeshType=Enum.MeshType.Brick,
+Offset=Vector3.new(0,0,-1E-6),
+}),
+})
+
+return ag
+end
+
+
+local function createAcrylicBlur(ag)
+local ah={}
+
+ag=ag or 0.001
+local ai={
+topLeft=Vector2.new(),
+topRight=Vector2.new(),
+bottomRight=Vector2.new(),
+}
+local aj=createAcrylic()
+aj.Parent=af
+
+local function updatePositions(ak,al)
+ai.topLeft=al
+ai.topRight=al+Vector2.new(ak.X,0)
+ai.bottomRight=al+ak
+end
+
+local function render()
+local ak=aa(game:GetService"Workspace").CurrentCamera
+if ak then
+ak=ak.CFrame
+end
+local al=ak
+if not al then
+al=CFrame.new()
+end
+
+local am=al
+local an=ai.topLeft
+local ao=ai.topRight
+local ap=ai.bottomRight
+
+local aq=ad(an,ag)
+local ar=ad(ao,ag)
+local as=ad(ap,ag)
+
+local at=(ar-aq).Magnitude
+local au=(ar-as).Magnitude
+
+aj.CFrame=
+CFrame.fromMatrix((aq+as)/2,am.XVector,am.YVector,am.ZVector)
+aj.Mesh.Scale=Vector3.new(at,au,0)
+end
+
+local function onChange(ak)
+local al=ae()
+local am=ak.AbsoluteSize-Vector2.new(al,al)
+local an=ak.AbsolutePosition+Vector2.new(al/2,al/2)
+
+updatePositions(am,an)
+task.spawn(render)
+end
+
+local function renderOnChange()
+local ak=aa(game:GetService"Workspace").CurrentCamera
+if not ak then
+return
+end
+
+table.insert(ah,ak:GetPropertyChangedSignal"CFrame":Connect(render))
+table.insert(ah,ak:GetPropertyChangedSignal"ViewportSize":Connect(render))
+table.insert(ah,ak:GetPropertyChangedSignal"FieldOfView":Connect(render))
+task.spawn(render)
+end
+
+aj.Destroying:Connect(function()
+for ak,al in ah do
+pcall(function()
+al:Disconnect()
+end)
+end
+end)
+
+renderOnChange()
+
+return onChange,aj
+end
+
+return function(ag)
+local ah={}
+local ai,aj=createAcrylicBlur(ag)
+
+local ak=ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.fromScale(1,1),
 })
 
-ad.AddParent=function(af)end
-ad.SetVisibility=function(af)end
-ad.Frame=ae
-ad.Model=nil
+ab.AddSignal(ak:GetPropertyChangedSignal"AbsolutePosition",function()
+ai(ak)
+end)
 
-return ad
-end end function a.q()
+ab.AddSignal(ak:GetPropertyChangedSignal"AbsoluteSize",function()
+ai(ak)
+end)
+
+ah.AddParent=function(al)
+ab.AddSignal(al:GetPropertyChangedSignal"Visible",function()
+ah.SetVisibility(al.Visible)
+end)
+end
+
+ah.SetVisibility=function(al)
+aj.Transparency=al and 0.98 or 1
+end
+
+ah.Frame=ak
+ah.Model=aj
+
+return ah
+end end function a.r()
 
 
 
-local aa=a.load'c'a.load'p'
+local aa=a.load'c'
+local ab=a.load'q'
 
+local ac=aa.New
 
-local ab=aa.New
+return function(ad)
+local ae={}
 
-return function(ac)
-local ad={}
-
-ad.Frame=ab("Frame",{
+ae.Frame=ac("Frame",{
 Size=UDim2.fromScale(1,1),
 BackgroundTransparency=1,
 BackgroundColor3=Color3.fromRGB(255,255,255),
@@ -2987,11 +3134,11 @@ BorderSizePixel=0,
 
 
 
-ab("UICorner",{
+ac("UICorner",{
 CornerRadius=UDim.new(0,8),
 }),
 
-ab("Frame",{
+ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.fromScale(1,1),
 Name="Background",
@@ -2999,12 +3146,12 @@ ThemeTag={
 BackgroundColor3="AcrylicMain",
 },
 },{
-ab("UICorner",{
+ac("UICorner",{
 CornerRadius=UDim.new(0,8),
 }),
 }),
 
-ab("Frame",{
+ac("Frame",{
 BackgroundColor3=Color3.fromRGB(255,255,255),
 BackgroundTransparency=1,
 Size=UDim2.fromScale(1,1),
@@ -3021,7 +3168,7 @@ Size=UDim2.fromScale(1,1),
 
 }),
 
-ab("ImageLabel",{
+ac("ImageLabel",{
 Image="rbxassetid://9968344105",
 ImageTransparency=0.98,
 ScaleType=Enum.ScaleType.Tile,
@@ -3029,12 +3176,12 @@ TileSize=UDim2.new(0,128,0,128),
 Size=UDim2.fromScale(1,1),
 BackgroundTransparency=1,
 },{
-ab("UICorner",{
+ac("UICorner",{
 CornerRadius=UDim.new(0,8),
 }),
 }),
 
-ab("ImageLabel",{
+ac("ImageLabel",{
 Image="rbxassetid://9968344227",
 ImageTransparency=0.9,
 ScaleType=Enum.ScaleType.Tile,
@@ -3045,12 +3192,12 @@ ThemeTag={
 ImageTransparency="AcrylicNoise",
 },
 },{
-ab("UICorner",{
+ac("UICorner",{
 CornerRadius=UDim.new(0,8),
 }),
 }),
 
-ab("Frame",{
+ac("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.fromScale(1,1),
 ZIndex=2,
@@ -3069,30 +3216,77 @@ ZIndex=2,
 })
 
 
-local ae
+local af
 
 task.wait()
+if ad.UseAcrylic then
+af=ab()
 
-
-
-return ad,ae
-end end function a.r()
-
-
-
-
-local aa={
-AcrylicBlur=a.load'p',
-AcrylicPaint=a.load'q',
-}
-
-function aa.init()
-
-function aa.Enable()end
-function aa.Disable()end
+af.Frame.Parent=ae.Frame
+ae.Model=af.Model
+ae.AddParent=af.AddParent
+ae.SetVisibility=af.SetVisibility
 end
 
-return aa end function a.s()
+return ae,af
+end end function a.s()
+
+
+
+local aa=(cloneref or clonereference or function(aa)return aa end)
+
+
+local ab={
+AcrylicBlur=a.load'q',
+
+AcrylicPaint=a.load'r',
+}
+
+function ab.init()
+local ac=Instance.new"DepthOfFieldEffect"
+ac.FarIntensity=0
+ac.InFocusRadius=0.1
+ac.NearIntensity=1
+
+local ad={}
+
+function ab.Enable()
+for ae,af in pairs(ad)do
+af.Enabled=false
+end
+ac.Parent=aa(game:GetService"Lighting")
+end
+
+function ab.Disable()
+for ae,af in pairs(ad)do
+af.Enabled=af.enabled
+end
+ac.Parent=nil
+end
+
+local function registerDefaults()
+local function register(ae)
+if ae:IsA"DepthOfFieldEffect"then
+ad[ae]={enabled=ae.Enabled}
+end
+end
+
+for ae,af in pairs(aa(game:GetService"Lighting"):GetChildren())do
+register(af)
+end
+
+if aa(game:GetService"Workspace").CurrentCamera then
+for ae,af in pairs(aa(game:GetService"Workspace").CurrentCamera:GetChildren())do
+register(af)
+end
+end
+end
+
+registerDefaults()
+ab.Enable()
+end
+
+return ab end function a.t()
 
 local aa={}
 
@@ -3286,7 +3480,7 @@ ah:Open()
 return af
 end
 
-return aa end function a.t()
+return aa end function a.u()
 return function(aa)
 return{
 Dark={
@@ -3533,7 +3727,7 @@ Button=aa:Gradient({
 Icon=Color3.fromHex"#ffffff",
 },
 }
-end end function a.u()
+end end function a.v()
 
 local aa={}
 
@@ -3634,7 +3828,7 @@ return am
 end
 
 
-return aa end function a.v()
+return aa end function a.w()
 local aa={}
 
 local ab=(cloneref or clonereference or function(ab)return ab end)
@@ -3810,7 +4004,7 @@ return ak
 end
 
 
-return aa end function a.w()
+return aa end function a.x()
 local aa={}
 
 
@@ -3978,7 +4172,7 @@ return ah
 end
 
 
-return aa end function a.x()
+return aa end function a.y()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 
@@ -4068,7 +4262,7 @@ value=af.Value,
 end,
 Load=function(af,ag)
 if af and af.Set then
-af:Set(ag.value)
+af:Set(ag.value,true)
 end
 end
 },
@@ -4093,15 +4287,51 @@ if not isfolder(ae.Path)then
 makefolder(ae.Path)
 end
 
-local ah=ae:AllConfigs()
 
-for ai,aj in next,ah do
-if isfile and readfile and isfile(aj..".json")then
-ae.Configs[aj]=readfile(aj..".json")
-end
-end
+task.spawn(function()
+task.wait(1)
+ae:LoadAutoloadConfig()
+end)
 
 return ae
+end
+
+function ae.LoadAutoloadConfig(af)
+if not listfiles or not isfile or not readfile then
+return false,"File functions not available"
+end
+
+local ag=ae:AllConfigs()
+
+for ah,ai in next,ag do
+local aj=ae.Path..ai..".json"
+
+if isfile(aj)then
+local ak,al=pcall(function()
+return ac:JSONDecode(readfile(aj))
+end)
+
+if ak and al and al.__autoload==true then
+
+local am=ae:CreateConfig(ai,true)
+if am then
+am._loaded=true
+local an=pcall(function()
+am:Load()
+end)
+
+if an then
+if ad.Debug then
+print("[ WindUI.ConfigManager ] AutoLoaded config: "..ai)
+end
+return true,ai
+end
+end
+end
+end
+end
+
+return false,"No autoload config found"
 end
 
 function ae.SetPath(af,ag)
@@ -4123,6 +4353,26 @@ return true
 end
 
 function ae.CreateConfig(af,ag,ah)
+if not ag then
+return false,"No config file is selected"
+end
+
+
+if ae.Configs[ag]then
+local ai=ae.Configs[ag]
+if ah~=nil then
+ai.AutoLoad=ah
+end
+
+if ad._AllFlaggedElements then
+for aj,ak in next,ad._AllFlaggedElements do
+ai.Elements[aj]=ak
+end
+end
+ai:SetAsCurrent()
+return ai
+end
+
 local ai={
 Path=ae.Path..ag..".json",
 Elements={},
@@ -4131,8 +4381,23 @@ AutoLoad=ah or false,
 Version=1.2,
 }
 
-if not ag then
-return false,"No config file is selected"
+
+if ad._AllFlaggedElements then
+for aj,ak in next,ad._AllFlaggedElements do
+ai.Elements[aj]=ak
+end
+end
+for aj,ak in pairs(ae.Configs)do
+if ak.Elements then
+for al,am in next,ak.Elements do
+ai.Elements[al]=am
+end
+end
+end
+if ad.PendingFlags then
+for aj,ak in next,ad.PendingFlags do
+ai.Elements[aj]=ak
+end
 end
 
 function ai.SetAsCurrent(aj)
@@ -4156,6 +4421,12 @@ ai.AutoLoad=ak
 end
 
 function ai.Save(aj)
+
+if ad._AllFlaggedElements then
+for ak,al in next,ad._AllFlaggedElements do
+ai.Elements[ak]=al
+end
+end
 if ad.PendingFlags then
 for ak,al in next,ad.PendingFlags do
 ai:Register(ak,al)
@@ -4209,6 +4480,12 @@ __custom={}
 al=am
 end
 
+
+if ad._AllFlaggedElements then
+for am,an in next,ad._AllFlaggedElements do
+ai.Elements[am]=an
+end
+end
 if ad.PendingFlags then
 for am,an in next,ad.PendingFlags do
 ai:Register(am,an)
@@ -4217,12 +4494,17 @@ end
 
 for am,an in next,(al.__elements or{})do
 if ai.Elements[am]and ae.Parser[an.__type]then
-task.spawn(function()
+task.delay(0.05,function()
 ae.Parser[an.__type].Load(ai.Elements[am],an)
 end)
+elseif not ai.Elements[am]and an.__type then
+
+ad.PendingConfigData=ad.PendingConfigData or{}
+ad.PendingConfigData[am]=an
 end
 end
 
+ai._loaded=true
 ai.CustomData=al.__custom or{}
 
 return ai.CustomData
@@ -4271,8 +4553,11 @@ end)
 if aj and ak and ak.__autoload then
 ai.AutoLoad=true
 
+
+if not ai._loaded then
 task.spawn(function()
 task.wait(0.5)
+if not ai._loaded then
 local al,am=pcall(function()
 return ai:Load()
 end)
@@ -4281,7 +4566,9 @@ if ad.Debug then print("[ WindUI.ConfigManager ] AutoLoaded config: "..ag)end
 else
 warn("[ WindUI.ConfigManager ] Failed to AutoLoad config: "..ag.." - "..tostring(am))
 end
+end
 end)
+end
 end
 end
 
@@ -4298,13 +4585,92 @@ end
 function ae.GetAutoLoadConfigs(af)
 local ag={}
 
-for ah,ai in pairs(ae.Configs)do
-if ai.AutoLoad then
-table.insert(ag,ah)
+
+local ah=ae:AllConfigs()
+for ai,aj in next,ah do
+local ak=ae.Path..aj..".json"
+if isfile and isfile(ak)then
+local al,am=pcall(function()
+return ac:JSONDecode(readfile(ak))
+end)
+if al and am and am.__autoload==true then
+table.insert(ag,aj)
+end
 end
 end
 
 return ag
+end
+
+function ae.GetAutoLoad(af)
+
+local ag=ae:AllConfigs()
+for ah,ai in next,ag do
+local aj=ae.Path..ai..".json"
+if isfile and isfile(aj)then
+local ak,al=pcall(function()
+return ac:JSONDecode(readfile(aj))
+end)
+if ak and al and al.__autoload==true then
+return ai
+end
+end
+end
+
+
+for ah,ai in pairs(ae.Configs)do
+if type(ai)=="table"and ai.AutoLoad then
+return ah,ai
+end
+end
+return nil
+end
+
+function ae.HasAutoLoad(af)
+return ae:GetAutoLoad()~=false
+end
+
+function ae.ClearAllAutoLoad(af)
+
+for ag,ah in pairs(ae.Configs)do
+if type(ah)=="table"and ah.AutoLoad then
+ah:SetAutoLoad(false)
+pcall(function()ah:Save()end)
+end
+end
+
+
+local ag=ae:AllConfigs()
+for ah,ai in next,ag do
+local aj=ae.Path..ai..".json"
+if isfile and isfile(aj)then
+local ak,al=pcall(function()
+return ac:JSONDecode(readfile(aj))
+end)
+if ak and al and al.__autoload==true then
+al.__autoload=false
+pcall(function()
+writefile(aj,ac:JSONEncode(al))
+end)
+end
+end
+end
+end
+
+function ae.UpdateConfig(af,ag,ah)
+if not ag then return false,"Config name is required"end
+
+local ai=ae.Configs[ag]or ae:CreateConfig(ag,ah)
+if not ai then return false,"Failed to create or get config"end
+
+if ah~=nil then ai:SetAutoLoad(ah)end
+ad.CurrentConfig=ai
+
+local aj,ak=pcall(function()return ai:Save()end)
+if aj and ak then
+return true,"Config updated"
+end
+return false,"Failed to save config: "..tostring(ak)
 end
 
 function ae.DeleteConfig(af,ag)
@@ -4358,7 +4724,133 @@ function ae.GetConfig(af,ag)
 return ae.Configs[ag]
 end
 
-return ae end function a.y()
+function ae.SelectConfig(af,ag)
+if not ag then
+return false,"Config name is required"
+end
+
+local ah=ae.Configs[ag]
+if ah then
+ah:SetAsCurrent()
+return ah
+end
+
+local ai=ae.Path..ag..".json"
+if isfile and isfile(ai)then
+local aj=ae:CreateConfig(ag)
+return aj
+end
+
+return false,"Config not found"
+end
+
+function ae.ExportConfig(af,ag)
+local ah
+
+local ai=ae.Configs[ag]
+if ai then
+local aj=ai:Save()
+if not aj then
+return false,"Failed to get config data"
+end
+ah=ac:JSONEncode(aj)
+else
+
+local aj=ae.Path..ag..".json"
+if isfile and isfile(aj)then
+local ak,al=pcall(function()
+return readfile(aj)
+end)
+if ak and al then
+ah=al
+else
+return false,"Failed to read config file"
+end
+else
+return false,"Config not found"
+end
+end
+
+if setclipboard then
+setclipboard(ah)
+return true,"Config exported to clipboard"
+elseif toclipboard then
+toclipboard(ah)
+return true,"Config exported to clipboard"
+else
+return false,"Clipboard function not available"
+end
+end
+
+function ae.ImportConfig(af,ag,ah)
+if not ag then
+return false,"Config name is required"
+end
+
+if not ah or ah==""then
+return false,"Config data is empty"
+end
+
+local ai,aj=pcall(function()
+return ac:JSONDecode(ah)
+end)
+
+if not ai then
+return false,"Invalid config data format"
+end
+
+if not aj.__version or not aj.__elements then
+return false,"Invalid config format"
+end
+
+local ak=ae.Path..ag..".json"
+
+if writefile then
+local al,am=pcall(function()
+writefile(ak,ah)
+end)
+
+if not al then
+return false,"Failed to save config: "..tostring(am)
+end
+else
+return false,"writefile function not available"
+end
+
+local al=ae:CreateConfig(ag,aj.__autoload or false)
+if al then
+al:Load()
+return true,"Config imported successfully"
+else
+return false,"Failed to create config"
+end
+end
+
+function ae.ExportToClipboard(af)
+if not ad or not ad.CurrentConfig then
+return false,"No current config selected"
+end
+
+local ag
+for ah,ai in pairs(ae.Configs)do
+if ai==ad.CurrentConfig then
+ag=ah
+break
+end
+end
+
+if not ag then
+return false,"Current config not found"
+end
+
+return ae:ExportConfig(ag)
+end
+
+function ae.ImportFromClipboard(af,ag,ah)
+return ae:ImportConfig(ag,ah)
+end
+
+return ae end function a.z()
 local aa={}
 
 local ab=a.load'c'
@@ -4643,7 +5135,7 @@ end
 
 
 
-return aa end function a.z()
+return aa end function a.A()
 local aa={}
 
 local ab=a.load'c'
@@ -4805,7 +5297,7 @@ end
 
 
 
-return aa end function a.A()
+return aa end function a.B()
 local aa=a.load'c'
 local ab=aa.New
 local ac=aa.NewRoundFrame
@@ -5522,7 +6014,7 @@ end
 
 
 return ag
-end end function a.B()
+end end function a.C()
 local aa=a.load'c'
 local ab=aa.New
 
@@ -5543,7 +6035,7 @@ Desc=af.Desc or nil,
 
 Locked=af.Locked or false,
 }
-local ah=a.load'A'(af)
+local ah=a.load'B'(af)
 
 ag.ParagraphFrame=ah
 if af.Buttons and#af.Buttons>0 then
@@ -5571,7 +6063,7 @@ return ag.__type,ag
 
 end
 
-return ac end function a.C()
+return ac end function a.D()
 local aa=a.load'c'local ab=
 aa.New
 
@@ -5595,7 +6087,7 @@ UIElements={}
 
 local ag=true
 
-af.ButtonFrame=a.load'A'{
+af.ButtonFrame=a.load'B'{
 Title=af.Title,
 Desc=af.Desc,
 Parent=ae.Parent,
@@ -5671,7 +6163,7 @@ end)
 return af.__type,af
 end
 
-return ac end function a.D()
+return ac end function a.E()
 local aa={}
 
 local ab=a.load'c'
@@ -5949,7 +6441,7 @@ end
 return ap,am
 end
 
-return aa end function a.E()
+return aa end function a.F()
 local aa={}
 
 local ab=a.load'c'local ac=
@@ -6049,13 +6541,13 @@ return an,ak
 end
 
 
-return aa end function a.F()
+return aa end function a.G()
 local aa=a.load'c'local ab=
 aa.New local ac=
 aa.Tween
 
-local ad=a.load'D'.New
-local ae=a.load'E'.New
+local ad=a.load'E'.New
+local ae=a.load'F'.New
 
 local af={}
 
@@ -6073,7 +6565,7 @@ Type=ah.Type or"Toggle",
 Callback=ah.Callback or function()end,
 UIElements={}
 }
-ai.ToggleFrame=a.load'A'{
+ai.ToggleFrame=a.load'B'{
 Title=ai.Title,
 Desc=ai.Desc,
 
@@ -6159,7 +6651,7 @@ end
 return ai.__type,ai
 end
 
-return af end function a.G()
+return af end function a.H()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 
@@ -6262,7 +6754,7 @@ av.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
 aw=aw+al.IconSize-2
 end
 end
-al.SliderFrame=a.load'A'{
+al.SliderFrame=a.load'B'{
 Title=al.Title,
 Desc=al.Desc,
 Parent=ak.Parent,
@@ -6363,7 +6855,7 @@ Visible=al.IsTextbox,
 
 local ax
 if al.IsTooltip then
-ax=a.load'z'.New(ap,al.UIElements.SliderIcon.Frame.Thumb,true,"Secondary","Small",false)
+ax=a.load'A'.New(ap,al.UIElements.SliderIcon.Frame.Thumb,true,"Secondary","Small",false)
 ax.Container.AnchorPoint=Vector2.new(0.5,1)
 ax.Container.Position=UDim2.new(0.5,0,0,-8)
 end
@@ -6512,7 +7004,7 @@ end)
 return al.__type,al
 end
 
-return ah end function a.H()
+return ah end function a.I()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 local ac=aa(game:GetService"UserInputService")
@@ -6526,7 +7018,7 @@ UICorner=6,
 UIPadding=8,
 }
 
-local ah=a.load'u'.New
+local ah=a.load'v'.New
 
 function ag.New(ai,aj)
 local function NormalizeKeyCode(ak)
@@ -6554,7 +7046,7 @@ UIElements={},
 
 local al=true
 
-ak.KeybindFrame=a.load'A'{
+ak.KeybindFrame=a.load'B'{
 Title=ak.Title,
 Desc=ak.Desc,
 Parent=aj.Parent,
@@ -6673,7 +7165,7 @@ end)
 return ak.__type,ak
 end
 
-return ag end function a.I()
+return ag end function a.J()
 local aa=a.load'c'
 local ac=aa.New local ad=
 aa.Tween
@@ -6707,7 +7199,7 @@ Width=150,
 
 local ak=true
 
-aj.InputFrame=a.load'A'{
+aj.InputFrame=a.load'B'{
 Title=aj.Title,
 Desc=aj.Desc,
 Parent=ai.Parent,
@@ -6783,7 +7275,7 @@ end
 return aj.__type,aj
 end
 
-return ae end function a.J()
+return ae end function a.K()
 local aa=a.load'c'
 local ac=aa.New
 
@@ -6810,7 +7302,7 @@ ah
 return"Divider",{__type="Divider",ElementFrame=ai}
 end
 
-return ae end function a.K()
+return ae end function a.L()
 local aa={}
 
 local ac=(cloneref or clonereference or function(ac)return ac end)
@@ -7949,7 +8441,7 @@ if v.Locked then return end
 Callback(u.Callback or function()end)
 end)
 end
-else a.load'J'
+else a.load'K'
 :New{Parent=b}
 end
 end
@@ -8102,7 +8594,7 @@ UpdatePosition
 return au
 end
 
-return aa end function a.L()
+return aa end function a.M()
 
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
@@ -8114,9 +8606,9 @@ local ae=a.load'c'
 local af=ae.New local ag=
 ae.Tween
 
-local ah=a.load'u'.New local ai=a.load'm'
+local ah=a.load'v'.New local ai=a.load'm'
 .New
-local aj=a.load'K'.New local ak=
+local aj=a.load'L'.New local ak=
 
 workspace.CurrentCamera
 
@@ -8162,7 +8654,7 @@ end
 
 local ap=true
 
-ao.DropdownFrame=a.load'A'{
+ao.DropdownFrame=a.load'B'{
 Title=ao.Title,
 Desc=ao.Desc,
 Parent=an.Parent,
@@ -8243,7 +8735,7 @@ end
 return ao.__type,ao
 end
 
-return al end function a.M()
+return al end function a.N()
 
 
 
@@ -8415,14 +8907,14 @@ end
 return table.concat(ar)
 end
 
-return aa end function a.N()
+return aa end function a.O()
 local aa={}
 
 local ae=a.load'c'
 local af=ae.New
 local ah=ae.Tween
 
-local aj=a.load'M'
+local aj=a.load'N'
 
 function aa.New(ak,al,am,an,ao)
 local ap={
@@ -8625,12 +9117,12 @@ return ap
 end
 
 
-return aa end function a.O()
+return aa end function a.P()
 local aa=a.load'c'local ae=
 aa.New
 
 
-local af=a.load'N'
+local af=a.load'O'
 
 local ah={}
 
@@ -8688,7 +9180,7 @@ al.ElementFrame=an.CodeFrame
 return al.__type,al
 end
 
-return ah end function a.P()
+return ah end function a.Q()
 local aa=a.load'c'
 local ae=aa.New local af=
 aa.Tween
@@ -9339,7 +9831,7 @@ local av=true
 
 
 
-au.ColorpickerFrame=a.load'A'{
+au.ColorpickerFrame=a.load'B'{
 Title=au.Title,
 Desc=au.Desc,
 Parent=at.Parent,
@@ -9407,7 +9899,7 @@ end)
 return au.__type,au
 end
 
-return ar end function a.Q()
+return ar end function a.R()
 local aa=a.load'c'
 local ae=aa.New
 local af=aa.Tween
@@ -9733,7 +10225,7 @@ end)
 return al.__type,al
 end
 
-return ah end function a.R()
+return ah end function a.S()
 
 local aa=a.load'c'
 local ae=aa.New
@@ -9750,7 +10242,7 @@ BackgroundTransparency=1,
 return"Space",{__type="Space",ElementFrame=ak}
 end
 
-return af end function a.S()
+return af end function a.T()
 local aa=a.load'c'
 local ae=aa.New
 
@@ -9819,7 +10311,7 @@ end
 return ak.__type,ak
 end
 
-return af end function a.T()
+return af end function a.U()
 local aa=a.load'c'
 local ae=aa.New
 
@@ -9901,7 +10393,7 @@ aj.Tab
 return ak.__type,ak
 end
 
-return af end function a.U()
+return af end function a.V()
 local aa=a.load'c'local ae=
 aa.New
 
@@ -9934,7 +10426,7 @@ local an=al and al.ConfigManager or nil
 
 local ao=game:GetService"RunService":IsStudio()
 
-if ao then a.load'A'
+if ao then a.load'B'
 
 {
 Title="Configuration",
@@ -9950,7 +10442,7 @@ ParentConfig=aj,
 return ak.__type,ak
 end
 
-if not an then a.load'A'
+if not an then a.load'B'
 {
 Title="Configuration",
 Desc="ConfigManager not initialized. Please set Window.Folder and initialize ConfigManager.",
@@ -10390,25 +10882,25 @@ end
 return ak.__type,ak
 end
 
-return af end function a.V()
+return af end function a.W()
 
 return{
 Elements={
-Paragraph=a.load'B',
-Button=a.load'C',
-Toggle=a.load'F',
-Slider=a.load'G',
-Keybind=a.load'H',
-Input=a.load'I',
-Dropdown=a.load'L',
-Code=a.load'O',
-Colorpicker=a.load'P',
-Section=a.load'Q',
-Divider=a.load'J',
-Space=a.load'R',
-Image=a.load'S',
-Group=a.load'T',
-ConfigSection=a.load'U',
+Paragraph=a.load'C',
+Button=a.load'D',
+Toggle=a.load'G',
+Slider=a.load'H',
+Keybind=a.load'I',
+Input=a.load'J',
+Dropdown=a.load'M',
+Code=a.load'P',
+Colorpicker=a.load'Q',
+Section=a.load'R',
+Divider=a.load'K',
+Space=a.load'S',
+Image=a.load'T',
+Group=a.load'U',
+ConfigSection=a.load'V',
 
 },
 Load=function(aa,ae,af,ah,aj,ak,al,am,an)
@@ -10449,7 +10941,7 @@ end)
 if aw then
 ah.PendingConfigData[ar.Flag]=nil
 else
-warn("[ui] Failed to apply pending config for '"..ar.Flag.."': "..tostring(ax))
+warn("[ WindUI ] Failed to apply pending config for '"..ar.Flag.."': "..tostring(ax))
 end
 end)
 end
@@ -10527,7 +11019,7 @@ end
 end
 end,
 
-}end function a.W()
+}end function a.X()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 aa(game:GetService"UserInputService")
@@ -10537,8 +11029,8 @@ local af=a.load'c'
 local ah=af.New
 local aj=af.Tween
 
-local ak=a.load'z'.New
-local al=a.load'v'.New
+local ak=a.load'A'.New
+local al=a.load'w'.New
 
 
 
@@ -10963,7 +11455,7 @@ end
 
 
 
-local ay=a.load'V'
+local ay=a.load'W'
 
 ay.Load(ap,ap.UIElements.ContainerFrame,ay.Elements,Window,WindUI,nil,ay,ao)
 
@@ -11022,7 +11514,7 @@ aA.Window=Window
 aA.WindUI=WindUI
 aA.UIScale=ao
 
-local aB=a.load'U'local
+local aB=a.load'V'local
 b, d=aB:New(aA)
 
 return d
@@ -11124,7 +11616,7 @@ am.OnChangeFunc(ao)
 end
 end
 
-return am end function a.X()
+return am end function a.Y()
 
 local aa={}
 
@@ -11133,7 +11625,7 @@ local ae=a.load'c'
 local af=ae.New
 local ah=ae.Tween
 
-local aj=a.load'W'
+local aj=a.load'X'
 
 function aa.New(ak,al,am,an,ao)
 local ap={
@@ -11301,7 +11793,7 @@ return ap
 end
 
 
-return aa end function a.Y()
+return aa end function a.Z()
 return{
 Tab="table-of-contents",
 Paragraph="type",
@@ -11313,7 +11805,7 @@ Input="text-cursor-input",
 Dropdown="chevrons-up-down",
 Code="terminal",
 Colorpicker="palette",
-}end function a.Z()
+}end function a._()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 aa(game:GetService"UserInputService")
@@ -11337,7 +11829,7 @@ Radius=22,
 Width=400,
 MaxHeight=380,
 
-Icons=a.load'Y'
+Icons=a.load'Z'
 }
 
 
@@ -11838,7 +12330,7 @@ an:Open()
 return an
 end
 
-return ae end function a._()
+return ae end function a.aa()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 local ae=aa(game:GetService"UserInputService")
@@ -11847,19 +12339,19 @@ local ah=aa(game:GetService"Players")
 
 local aj=workspace.CurrentCamera
 
-local ak=a.load'r'
+local ak=a.load's'
 
 local al=a.load'c'
 local am=al.New
 local an=al.Tween
 
 
-local ao=a.load'u'.New
+local ao=a.load'v'.New
 local ap=a.load'l'.New
-local aq=a.load'v'.New
-local ar=a.load'w'
+local aq=a.load'w'.New
+local ar=a.load'x'
 
-local as=a.load'x'
+local as=a.load'y'
 
 
 
@@ -11933,6 +12425,7 @@ AllElements={},
 ElementConfig={},
 
 PendingFlags={},
+_AllFlaggedElements={},
 
 IsToggleDragging=false,
 }
@@ -12051,13 +12544,18 @@ not au.HideSearchBar and-45 or 0
 Position=UDim2.new(0,0,1,0),
 AnchorPoint=Vector2.new(0,1),
 BackgroundTransparency=1,
-ScrollBarThickness=0,
+ScrollBarThickness=4,
+ScrollBarImageColor3=Color3.fromRGB(255,255,255),
+ScrollBarImageTransparency=0.7,
+TopImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
+MidImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
+BottomImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
 ElasticBehavior="Never",
 CanvasSize=UDim2.new(0,0,0,0),
 AutomaticCanvasSize="Y",
 ScrollingDirection="Y",
 ClipsDescendants=true,
-VerticalScrollBarPosition="Left",
+VerticalScrollBarPosition="Right",
 },{
 am("Frame",{
 BackgroundTransparency=1,
@@ -12589,7 +13087,12 @@ am("ScrollingFrame",{
 Name="Center",
 BackgroundTransparency=1,
 AutomaticSize="Y",
-ScrollBarThickness=0,
+ScrollBarThickness=4,
+ScrollBarImageColor3=Color3.fromRGB(255,255,255),
+ScrollBarImageTransparency=0.7,
+TopImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
+MidImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
+BottomImage="rbxasset://textures/ui/Scroll/scroll-middle.png",
 ScrollingDirection="X",
 AutomaticCanvasSize="X",
 CanvasSize=UDim2.new(0,0,0,0),
@@ -12814,7 +13317,7 @@ end
 
 
 
-au.OpenButtonMain=a.load'y'.New(au)
+au.OpenButtonMain=a.load'z'.New(au)
 
 
 task.spawn(function()
@@ -13276,8 +13779,8 @@ au:EditOpenButton(au.OpenButton)
 end
 
 
-local z=a.load'W'
-local A=a.load'X'
+local z=a.load'X'
+local A=a.load'Y'
 local B=z.Init(au,at.WindUI,at.WindUI.TooltipGui)
 B:OnChange(function(C)au.CurrentTab=C end)
 
@@ -13672,7 +14175,7 @@ end)
 
 
 if not au.HideSearchBar then
-local M=a.load'Z'
+local M=a.load'_'
 local N=false
 
 
@@ -13815,7 +14318,7 @@ local aq=ap.New local ar=
 ap.Tween
 
 
-local as=a.load'r'
+local as=a.load's'
 
 
 local at=protectgui or(syn and syn.protect_gui)or function()end
@@ -14002,11 +14505,11 @@ end
 
 function ae.Popup(ax,ay)
 ay.WindUI=ae
-return a.load's'.new(ay)
+return a.load't'.new(ay)
 end
 
 
-ae.Themes=a.load't'(ae)
+ae.Themes=a.load'u'(ae)
 
 ap.Themes=ae.Themes
 
@@ -14016,7 +14519,7 @@ ae:SetLanguage(ap.Language)
 
 
 function ae.CreateWindow(ax,ay)
-local az=a.load'_'
+local az=a.load'aa'
 
 if not aa:IsStudio()then
 if not isfolder"WindUI"then
