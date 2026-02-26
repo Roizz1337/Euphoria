@@ -4,7 +4,7 @@
     | |/ |/ / / _ \/ _  / /_/ // /  
     |__/|__/_/_//_/\_,_/\____/___/
     
-    v1.6.64  |  2026-02-07  |  Roblox UI Library for scripts
+    v1.6.64  |  2026-02-26  |  Roblox UI Library for scripts
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -484,7 +484,7 @@ if not u then
 if m and m.Window and m.Window.Debug then local
 x, z=v:find":%d+: "
 
-warn("[ WindUI: DEBUG Mode ] "..v)
+warn("[ UI: DEBUG Mode ] "..v)
 
 return m:Notify{
 Title="DEBUG Mode: Error",
@@ -643,7 +643,7 @@ for x,z in pairs(v.Properties or{})do
 local A=p.GetThemeProperty(z,p.Theme)
 if A~=nil then
 if typeof(A)=="Color3"then
-local B=v.Object:FindFirstChild"WindUIGradient"
+local B=v.Object:FindFirstChild"_g"
 if B then
 B:Destroy()
 end
@@ -656,10 +656,10 @@ end
 elseif typeof(A)=="table"and A.Color and A.Transparency then
 v.Object[x]=Color3.new(1,1,1)
 
-local B=v.Object:FindFirstChild"WindUIGradient"
+local B=v.Object:FindFirstChild"_g"
 if not B then
 B=Instance.new"UIGradient"
-B.Name="WindUIGradient"
+B.Name="_g"
 B.Parent=v.Object
 end
 
@@ -680,7 +680,7 @@ end
 end
 else
 
-local B=v.Object:FindFirstChild"WindUIGradient"
+local B=v.Object:FindFirstChild"_g"
 if B then
 B:Destroy()
 end
@@ -1015,7 +1015,7 @@ Colors={
 }.IconFrame
 J.Parent=H
 elseif string.find(v,"http")then
-local J="WindUI/"..A.."/assets/."..B.."-"..x..".png"
+local J=A.."/assets/."..B.."-"..x..".png"
 local L,M=pcall(function()
 task.spawn(function()
 local L=p.Request and p.Request{
@@ -1030,7 +1030,7 @@ local M,N=pcall(getcustomasset,J)
 if M then
 H.ImageLabel.Image=N
 else
-warn(string.format("[ WindUI.Creator ] Failed to load custom asset '%s': %s",J,tostring(N)))
+warn(string.format("[cr] Failed to load custom asset '%s': %s",J,tostring(N)))
 H:Destroy()
 
 return
@@ -1038,7 +1038,7 @@ end
 end)
 end)
 if not L then
-warn("[ WindUI.Creator ]  '"..identifyexecutor()or"Studio".."' doesnt support the URL Images. Error: "..M)
+warn("[cr]  '"..identifyexecutor()or"Studio".."' doesnt support the URL Images. Error: "..M)
 
 H:Destroy()
 end
@@ -4271,17 +4271,17 @@ end
 
 function ae.Init(af,ag)
 if not ag.Folder then
-warn"[ WindUI.ConfigManager ] Window.Folder is not specified."
+warn"[cfg] Window.Folder is not specified."
 return false
 end
 if ab:IsStudio()then
-warn"[ WindUI.ConfigManager ] The config system doesn't work in the studio."
+warn"[cfg] The config system doesn't work in the studio."
 return false
 end
 
 ad=ag
 ae.Folder=ad.Folder
-ae.Path="WindUI/"..tostring(ae.Folder).."/config/"
+ae.Path=tostring(ae.Folder).."/config/"
 
 if not isfolder(ae.Path)then
 makefolder(ae.Path)
@@ -4322,7 +4322,7 @@ end)
 
 if an then
 if ad.Debug then
-print("[ WindUI.ConfigManager ] AutoLoaded config: "..ai)
+print("[cfg] AutoLoaded config: "..ai)
 end
 return true,ai
 end
@@ -4336,7 +4336,7 @@ end
 
 function ae.SetPath(af,ag)
 if not ag then
-warn"[ WindUI.ConfigManager ] Custom path is not specified."
+warn"[cfg] Custom path is not specified."
 return false
 end
 
@@ -4461,7 +4461,7 @@ end
 
 local ak,al=pcall(function()
 local ak=readfile or function()
-warn"[ WindUI.ConfigManager ] The config system doesn't work in the studio."
+warn"[cfg] The config system doesn't work in the studio."
 return nil
 end
 return ac:JSONDecode(ak(ai.Path))
@@ -4562,9 +4562,9 @@ local al,am=pcall(function()
 return ai:Load()
 end)
 if al then
-if ad.Debug then print("[ WindUI.ConfigManager ] AutoLoaded config: "..ag)end
+if ad.Debug then print("[cfg] AutoLoaded config: "..ag)end
 else
-warn("[ WindUI.ConfigManager ] Failed to AutoLoad config: "..ag.." - "..tostring(am))
+warn("[cfg] Failed to AutoLoad config: "..ag.." - "..tostring(am))
 end
 end
 end)
@@ -10941,7 +10941,7 @@ end)
 if aw then
 ah.PendingConfigData[ar.Flag]=nil
 else
-warn("[ WindUI ] Failed to apply pending config for '"..ar.Flag.."': "..tostring(ax))
+warn("[ui] Failed to apply pending config for '"..ar.Flag.."': "..tostring(ax))
 end
 end)
 end
@@ -12452,12 +12452,6 @@ au.Topbar={Height=52,ButtonsType="Default"}
 end
 
 if not af:IsStudio()and au.Folder then
-if not isfolder("WindUI/"..au.Folder)then
-makefolder("WindUI/"..au.Folder)
-end
-if not isfolder("WindUI/"..au.Folder.."/assets")then
-makefolder("WindUI/"..au.Folder.."/assets")
-end
 if not isfolder(au.Folder)then
 makefolder(au.Folder)
 end
@@ -14298,47 +14292,60 @@ ae.cloneref=af
 
 local ah=af(game:GetService"HttpService")
 local aj=af(game:GetService"Players")
-local ak=af(game:GetService"CoreGui")local al=
+local ak=af(game:GetService"CoreGui")
+
+
+local function randomName()
+local al="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+local am=math.random(8,16)
+local an={}
+for ao=1,am do
+local ap=math.random(1,#al)
+an[ao]=al:sub(ap,ap)
+end
+return table.concat(an)
+end
+local al=randomName()local am=
 
 aj.LocalPlayer or nil
 
-local am=ah:JSONDecode(a.load'k')
-if am then
-ae.Version=am.version
+local an=ah:JSONDecode(a.load'k')
+if an then
+ae.Version=an.version
 end
 
-local an=a.load'o'local ao=
+local ao=a.load'o'local ap=
 
 ae.Services
 
 
-local ap=ae.Creator
+local aq=ae.Creator
 
-local aq=ap.New local ar=
-ap.Tween
-
-
-local as=a.load's'
+local ar=aq.New local as=
+aq.Tween
 
 
-local at=protectgui or(syn and syn.protect_gui)or function()end
+local at=a.load's'
 
-local au=gethui and gethui()or(ak or game.Players.LocalPlayer:WaitForChild"PlayerGui")
 
-local av=aq("UIScale",{
+local au=protectgui or(syn and syn.protect_gui)or function()end
+
+local av=gethui and gethui()or(ak or game.Players.LocalPlayer:WaitForChild"PlayerGui")
+
+local aw=ar("UIScale",{
 Scale=ae.Scale,
 })
 
-ae.UIScaleObj=av
+ae.UIScaleObj=aw
 
-ae.ScreenGui=aq("ScreenGui",{
-Name="WindUI",
-Parent=au,
+ae.ScreenGui=ar("ScreenGui",{
+Name=al,
+Parent=av,
 IgnoreGuiInset=true,
 ScreenInsets="None",
 },{
 
-aq("Folder",{
+ar("Folder",{
 Name="Window"
 }),
 
@@ -14347,244 +14354,245 @@ Name="Window"
 
 
 
-aq("Folder",{
+ar("Folder",{
 Name="KeySystem"
 }),
-aq("Folder",{
+ar("Folder",{
 Name="Popups"
 }),
-aq("Folder",{
+ar("Folder",{
 Name="ToolTips"
 })
 })
 
-ae.NotificationGui=aq("ScreenGui",{
-Name="WindUI/Notifications",
-Parent=au,
+ae.NotificationGui=ar("ScreenGui",{
+Name=al.."/N",
+Parent=av,
 IgnoreGuiInset=true,
 })
-ae.DropdownGui=aq("ScreenGui",{
-Name="WindUI/Dropdowns",
-Parent=au,
+ae.DropdownGui=ar("ScreenGui",{
+Name=al.."/D",
+Parent=av,
 IgnoreGuiInset=true,
 })
-ae.TooltipGui=aq("ScreenGui",{
-Name="WindUI/Tooltips",
-Parent=au,
+ae.TooltipGui=ar("ScreenGui",{
+Name=al.."/T",
+Parent=av,
 IgnoreGuiInset=true,
 })
-at(ae.ScreenGui)
-at(ae.NotificationGui)
-at(ae.DropdownGui)
-at(ae.TooltipGui)
+au(ae.ScreenGui)
+au(ae.NotificationGui)
+au(ae.DropdownGui)
+au(ae.TooltipGui)
 
-ap.Init(ae)
+aq.Init(ae)
 
 
-function ae.SetParent(aw,ax)
-ae.ScreenGui.Parent=ax
-ae.NotificationGui.Parent=ax
-ae.DropdownGui.Parent=ax
+function ae.SetParent(ax,ay)
+ae.ScreenGui.Parent=ay
+ae.NotificationGui.Parent=ay
+ae.DropdownGui.Parent=ay
 end
 math.clamp(ae.TransparencyValue,0,1)
 
-local aw=ae.NotificationModule.Init(ae.NotificationGui)
+local ax=ae.NotificationModule.Init(ae.NotificationGui)
 
-function ae.Notify(ax,ay)
-ay.Holder=aw.Frame
-ay.Window=ae.Window
+function ae.Notify(ay,az)
+az.Holder=ax.Frame
+az.Window=ae.Window
 
-return ae.NotificationModule.New(ay)
+return ae.NotificationModule.New(az)
 end
 
-function ae.SetNotificationLower(ax,ay)
-aw.SetLower(ay)
+function ae.SetNotificationLower(ay,az)
+ax.SetLower(az)
 end
 
-function ae.SetFont(ax,ay)
-ap.UpdateFont(ay)
+function ae.SetFont(ay,az)
+aq.UpdateFont(az)
 end
 
-function ae.OnThemeChange(ax,ay)
-ae.OnThemeChangeFunction=ay
+function ae.OnThemeChange(ay,az)
+ae.OnThemeChangeFunction=az
 end
 
-function ae.AddTheme(ax,ay)
-ae.Themes[ay.Name]=ay
-return ay
+function ae.AddTheme(ay,az)
+ae.Themes[az.Name]=az
+return az
 end
 
-function ae.SetTheme(ax,ay)
-if ae.Themes[ay]then
-ae.Theme=ae.Themes[ay]
-ap.SetTheme(ae.Themes[ay])
+function ae.SetTheme(ay,az)
+if ae.Themes[az]then
+ae.Theme=ae.Themes[az]
+aq.SetTheme(ae.Themes[az])
 
 if ae.OnThemeChangeFunction then
-ae.OnThemeChangeFunction(ay)
+ae.OnThemeChangeFunction(az)
 end
 
 
-return ae.Themes[ay]
+return ae.Themes[az]
 end
 return nil
 end
 
-function ae.GetThemes(ax)
+function ae.GetThemes(ay)
 return ae.Themes
 end
-function ae.GetCurrentTheme(ax)
+function ae.GetCurrentTheme(ay)
 return ae.Theme.Name
 end
-function ae.GetTransparency(ax)
+function ae.GetTransparency(ay)
 return ae.Transparent or false
 end
-function ae.GetWindowSize(ax)
+function ae.GetWindowSize(ay)
 return Window.UIElements.Main.Size
 end
-function ae.Localization(ax,ay)
-return ae.LocalizationModule:New(ay,ap)
+function ae.Localization(ay,az)
+return ae.LocalizationModule:New(az,aq)
 end
 
-function ae.SetLanguage(ax,ay)
-if ap.Localization then
-return ap.SetLanguage(ay)
+function ae.SetLanguage(ay,az)
+if aq.Localization then
+return aq.SetLanguage(az)
 end
 return false
 end
 
-function ae.ToggleAcrylic(ax,ay)
+function ae.ToggleAcrylic(ay,az)
 if ae.Window and ae.Window.AcrylicPaint and ae.Window.AcrylicPaint.Model then
-ae.Window.Acrylic=ay
-ae.Window.AcrylicPaint.Model.Transparency=ay and 0.98 or 1
-if ay then
-as.Enable()
+ae.Window.Acrylic=az
+ae.Window.AcrylicPaint.Model.Transparency=az and 0.98 or 1
+if az then
+at.Enable()
 else
-as.Disable()
+at.Disable()
 end
 end
 end
 
 
 
-function ae.Gradient(ax,ay,az)
-local aA={}
+function ae.Gradient(ay,az,aA)
 local aB={}
+local b={}
 
-for b,d in next,ay do
-local f=tonumber(b)
-if f then
-f=math.clamp(f/100,0,1)
-table.insert(aA,ColorSequenceKeypoint.new(f,d.Color))
-table.insert(aB,NumberSequenceKeypoint.new(f,d.Transparency or 0))
+for d,f in next,az do
+local g=tonumber(d)
+if g then
+g=math.clamp(g/100,0,1)
+table.insert(aB,ColorSequenceKeypoint.new(g,f.Color))
+table.insert(b,NumberSequenceKeypoint.new(g,f.Transparency or 0))
 end
 end
 
-table.sort(aA,function(b,d)return b.Time<d.Time end)
-table.sort(aB,function(b,d)return b.Time<d.Time end)
+table.sort(aB,function(d,f)return d.Time<f.Time end)
+table.sort(b,function(d,f)return d.Time<f.Time end)
 
 
-if#aA<2 then
+if#aB<2 then
 error"ColorSequence requires at least 2 keypoints"
 end
 
 
-local b={
-Color=ColorSequence.new(aA),
-Transparency=NumberSequence.new(aB),
+local d={
+Color=ColorSequence.new(aB),
+Transparency=NumberSequence.new(b),
 }
 
-if az then
-for d,f in pairs(az)do
-b[d]=f
+if aA then
+for f,g in pairs(aA)do
+d[f]=g
 end
 end
 
-return b
+return d
 end
 
 
-function ae.Popup(ax,ay)
-ay.WindUI=ae
-return a.load't'.new(ay)
+function ae.Popup(ay,az)
+az.WindUI=ae
+return a.load't'.new(az)
 end
 
 
 ae.Themes=a.load'u'(ae)
 
-ap.Themes=ae.Themes
+aq.Themes=ae.Themes
 
 
 ae:SetTheme"Dark"
-ae:SetLanguage(ap.Language)
+ae:SetLanguage(aq.Language)
 
 
-function ae.CreateWindow(ax,ay)
-local az=a.load'aa'
+function ae.CreateWindow(ay,az)
+local aA=a.load'aa'
 
 if not aa:IsStudio()then
-if not isfolder"WindUI"then
-makefolder"WindUI"
+if az.Folder then
+if not isfolder(az.Folder)then
+makefolder(az.Folder)
 end
-if ay.Folder then
-makefolder(ay.Folder)
 else
-makefolder(ay.Title)
+if not isfolder(az.Title)then
+makefolder(az.Title)
+end
 end
 end
 
-ay.WindUI=ae
-ay.Parent=ae.ScreenGui.Window
+az.WindUI=ae
+az.Parent=ae.ScreenGui.Window
 
 if ae.Window then
 warn"You cannot create more than one window"
 return
 end
 
-local aA=true
+local aB=true
 
-local aB=ae.Themes[ay.Theme or"Dark"]
-
-
-ap.SetTheme(aB)
+local b=ae.Themes[az.Theme or"Dark"]
 
 
-local b=gethwid or function()
+aq.SetTheme(b)
+
+
+local d=gethwid or function()
 return aj.LocalPlayer.UserId
 end
 
-local d=b()
+local f=d()
 
-if ay.KeySystem then
-aA=false
+if az.KeySystem then
+aB=false
 
 local function loadKeysystem()
-an.new(ay,d,function(f)aA=f end)
+ao.new(az,f,function(g)aB=g end)
 end
 
-local f=(ay.Folder or"Temp").."/"..d..".key"
+local g=(az.Folder or"Temp").."/"..f..".key"
 
-if ay.KeySystem.KeyValidator then
-if ay.KeySystem.SaveKey and isfile(f)then
-local g=readfile(f)
-local h=ay.KeySystem.KeyValidator(g)
+if az.KeySystem.KeyValidator then
+if az.KeySystem.SaveKey and isfile(g)then
+local h=readfile(g)
+local j=az.KeySystem.KeyValidator(h)
 
-if h then
-aA=true
+if j then
+aB=true
 else
 loadKeysystem()
 end
 else
 loadKeysystem()
 end
-elseif not ay.KeySystem.API then
-if ay.KeySystem.SaveKey and isfile(f)then
-local g=readfile(f)
-local h=(type(ay.KeySystem.Key)=="table")
-and table.find(ay.KeySystem.Key,g)
-or tostring(ay.KeySystem.Key)==tostring(g)
+elseif not az.KeySystem.API then
+if az.KeySystem.SaveKey and isfile(g)then
+local h=readfile(g)
+local j=(type(az.KeySystem.Key)=="table")
+and table.find(az.KeySystem.Key,h)
+or tostring(az.KeySystem.Key)==tostring(h)
 
-if h then
-aA=true
+if j then
+aB=true
 else
 loadKeysystem()
 end
@@ -14592,44 +14600,44 @@ else
 loadKeysystem()
 end
 else
-if isfile(f)then
-local g=readfile(f)
-local h=false
+if isfile(g)then
+local h=readfile(g)
+local j=false
 
-for j,l in next,ay.KeySystem.API do
-local m=ae.Services[l.Type]
-if m then
-local p={}
-for r,u in next,m.Args do
-table.insert(p,l[u])
+for l,m in next,az.KeySystem.API do
+local p=ae.Services[m.Type]
+if p then
+local r={}
+for u,v in next,p.Args do
+table.insert(r,m[v])
 end
 
-local r=m.New(table.unpack(p))
-local u=r.Verify(g)
-if u then
-h=true
+local u=p.New(table.unpack(r))
+local v=u.Verify(h)
+if v then
+j=true
 break
 end
 end
 end
 
-aA=h
-if not h then loadKeysystem()end
+aB=j
+if not j then loadKeysystem()end
 else
 loadKeysystem()
 end
 end
 
-repeat task.wait()until aA
+repeat task.wait()until aB
 end
 
-local f=az(ay)
+local g=aA(az)
 
-ae.Transparent=ay.Transparent
-ae.Window=f
+ae.Transparent=az.Transparent
+ae.Window=g
 
-if ay.Acrylic then
-as.init()
+if az.Acrylic then
+at.init()
 end
 
 
@@ -14644,7 +14652,7 @@ end
 
 
 
-return f
+return g
 end
 
 return ae
