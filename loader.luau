@@ -26,7 +26,7 @@ type loader_config = {
 }
 --@list_game_loaders
 local ___loaders: { [number]: loader_config } = {
-	[121864768012064] = {
+	[107734855681167] = {
 		name    = "fish it",
 		url     = "https://api.luarmor.net/files/v3/loaders/0ef4e27ac6957fc36ee7113bffa52c69.lua",
 		version = "1.0.0",
